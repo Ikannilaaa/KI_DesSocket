@@ -1,28 +1,23 @@
-# server.py
-
 import socket
-from des import encrypt, decrypt
+from des import decrypt
 
-def start_server(host='127.0.0.1', port=65432, key="mysecret"):
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
-        server_socket.bind((host, port))
-        server_socket.listen()
-        print(f"Server listening on {host}:{port}")
+def start_server():
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.bind(('localhost', 12345))
+    server_socket.listen(1)
+    print("Server is listening on port 12345...")
+
+    while True:
+        client_socket, addr = server_socket.accept()
+        print(f"Connection from {addr} established.")
         
-        conn, addr = server_socket.accept()
-        with conn:
-            print(f"Connected by {addr}")
-            while True:
-                data = conn.recv(1024)
-                if not data:
-                    break
-                encrypted_message = list(data)
-                decrypted_message = decrypt(encrypted_message, key)
-                print("Decrypted message:", decrypted_message)
+        encrypted_data = client_socket.recv(1024)  # Receive encrypted data
+        key = b'secretky'  # Hardcoded key (must be 8 bytes for DES)
+        
+        decrypted_data = decrypt(key, encrypted_data)
+        print(f"Decrypted data: {decrypted_data}")
 
-                response = "Message received"
-                encrypted_response = encrypt(response, key)
-                conn.sendall(bytes(encrypted_response))
+        client_socket.close()
 
 if __name__ == "__main__":
     start_server()
